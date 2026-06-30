@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useGameEngine } from './src/hooks/useGameEngine';
 import { CatView } from './src/components/CatView';
 import { CAT_TYPES, getCatEmoji } from './src/constants/cats';
@@ -13,7 +8,6 @@ import { GAME_WIDTH, GAME_HEIGHT, DANGER_LINE_Y } from './src/constants/game';
 
 export default function App() {
   const { cats, score, gameOver, nextLevel, canDrop, dropCat, reset } = useGameEngine();
-
   const next = CAT_TYPES[nextLevel - 1];
 
   const handlePress = (e) => {
@@ -21,93 +15,164 @@ export default function App() {
   };
 
   return (
-    <View style={styles.root}>
+    <LinearGradient colors={['#FFD6E7', '#E8D5FF', '#D5E8FF']} style={styles.bg}>
       <StatusBar hidden />
 
-      {/* HUD */}
-      <View style={[styles.hud, { width: GAME_WIDTH }]}>
-        <Text style={styles.scoreText}>🏆 {score}</Text>
-        <View style={[styles.nextBox, { borderColor: next.color }]}>
+      {/* Header */}
+      <View style={[styles.header, { width: GAME_WIDTH }]}>
+        {/* Score badge */}
+        <View style={styles.badge}>
+          <Text style={styles.badgeLabel}>SCORE</Text>
+          <Text style={styles.badgeValue}>{score}</Text>
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>🐱 CatMarge</Text>
+
+        {/* Next preview */}
+        <View style={styles.nextCard}>
           <Text style={styles.nextLabel}>NEXT</Text>
-          <Text style={styles.nextEmoji}>{getCatEmoji(nextLevel)}</Text>
+          <View style={[
+            styles.nextCircle,
+            { backgroundColor: next.color, width: 52, height: 52, borderRadius: 26 },
+          ]}>
+            <Text style={{ fontSize: 24 }}>{getCatEmoji(nextLevel)}</Text>
+          </View>
           <Text style={styles.nextName}>{next.name}</Text>
         </View>
       </View>
 
-      {/* Game Area */}
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={handlePress}
-        style={[styles.gameArea, { width: GAME_WIDTH, height: GAME_HEIGHT }]}
-      >
-        <View style={[styles.dangerLine, { top: DANGER_LINE_Y }]} />
-        {cats.map(cat => (
-          <CatView key={cat.id} cat={cat} />
-        ))}
-      </TouchableOpacity>
+      {/* Game area wrapper (elevation without overflow:hidden) */}
+      <View style={[styles.gameAreaShadow, { width: GAME_WIDTH, height: GAME_HEIGHT }]}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPressIn={handlePress}
+          style={styles.gameArea}
+        >
+          <View style={[styles.dangerLine, { top: DANGER_LINE_Y }]} />
+          {cats.map(cat => <CatView key={cat.id} cat={cat} />)}
+        </TouchableOpacity>
+      </View>
 
-      {/* Game Over */}
+      {/* Game Over overlay */}
       {gameOver && (
         <View style={styles.overlay}>
           <View style={styles.modal}>
-            <Text style={styles.gameOverTitle}>ゲームオーバー</Text>
-            <Text style={styles.finalScore}>スコア: {score}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={reset}>
-              <Text style={styles.retryText}>もう一度 🐱</Text>
-            </TouchableOpacity>
+            <LinearGradient colors={['#FF6B9D', '#C44DFF']} style={styles.modalTop}>
+              <Text style={styles.goEmoji}>😿</Text>
+              <Text style={styles.goTitle}>ゲームオーバー</Text>
+            </LinearGradient>
+            <View style={styles.modalBottom}>
+              <Text style={styles.goScoreLabel}>SCORE</Text>
+              <Text style={styles.goScore}>{score}</Text>
+              <TouchableOpacity onPress={reset}>
+                <LinearGradient colors={['#FF6B9D', '#C44DFF']} style={styles.retryBtn}>
+                  <Text style={styles.retryText}>もう一度 🐱</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  bg: {
     flex: 1,
-    backgroundColor: '#FFF5F7',
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 44,
   },
-  hud: {
+
+  /* Header */
+  header: {
     flexDirection:  'row',
     justifyContent: 'space-between',
     alignItems:     'center',
-    paddingVertical: 8,
+    marginBottom:   10,
     paddingHorizontal: 4,
   },
-  scoreText: {
-    fontSize:   24,
-    fontWeight: 'bold',
-    color:      '#E75480',
-  },
-  nextBox: {
-    alignItems:      'center',
-    borderWidth:     2,
-    borderRadius:    8,
-    padding:         6,
+  badge: {
     backgroundColor: '#fff',
-    minWidth:        64,
+    borderRadius:    16,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    alignItems:      'center',
+    minWidth:        80,
+    elevation:       4,
+    shadowColor:     '#FF6B9D',
+    shadowOffset:    { width: 0, height: 3 },
+    shadowOpacity:   0.3,
+    shadowRadius:    6,
+  },
+  badgeLabel: {
+    fontSize:      9,
+    fontWeight:    '800',
+    color:         '#C44DFF',
+    letterSpacing: 2,
+  },
+  badgeValue: {
+    fontSize:   24,
+    fontWeight: '900',
+    color:      '#FF6B9D',
+  },
+  title: {
+    fontSize:          20,
+    fontWeight:        '900',
+    color:             '#fff',
+    textShadowColor:   'rgba(160,0,120,0.45)',
+    textShadowOffset:  { width: 0, height: 2 },
+    textShadowRadius:  6,
+  },
+  nextCard: {
+    backgroundColor:  '#fff',
+    borderRadius:     16,
+    paddingVertical:  6,
+    paddingHorizontal: 10,
+    alignItems:       'center',
+    minWidth:         80,
+    elevation:        4,
+    shadowColor:      '#C44DFF',
+    shadowOffset:     { width: 0, height: 3 },
+    shadowOpacity:    0.3,
+    shadowRadius:     6,
   },
   nextLabel: {
-    fontSize:    10,
-    fontWeight:  'bold',
-    color:       '#aaa',
-    letterSpacing: 1,
+    fontSize:      9,
+    fontWeight:    '800',
+    color:         '#C44DFF',
+    letterSpacing: 2,
+    marginBottom:  4,
   },
-  nextEmoji: {
-    fontSize: 26,
+  nextCircle: {
+    justifyContent: 'center',
+    alignItems:     'center',
+    borderWidth:    2.5,
+    borderColor:    'rgba(0,0,0,0.1)',
   },
   nextName: {
-    fontSize:  11,
-    color:     '#555',
-    marginTop: 2,
+    fontSize:   10,
+    fontWeight: '700',
+    color:      '#aaa',
+    marginTop:  4,
+  },
+
+  /* Game area */
+  gameAreaShadow: {
+    borderRadius: 20,
+    elevation:    10,
+    shadowColor:  '#C44DFF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
   },
   gameArea: {
-    backgroundColor: '#FFF0F3',
-    borderWidth:     2,
-    borderColor:     '#F8B4C8',
-    borderRadius:    8,
+    flex:            1,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderWidth:     3,
+    borderColor:     '#E879F9',
+    borderRadius:    20,
     overflow:        'hidden',
   },
   dangerLine: {
@@ -115,8 +180,10 @@ const styles = StyleSheet.create({
     left:            0,
     right:           0,
     height:          2,
-    backgroundColor: 'rgba(220,50,50,0.4)',
+    backgroundColor: 'rgba(220,50,50,0.3)',
   },
+
+  /* Game Over */
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.55)',
@@ -124,33 +191,51 @@ const styles = StyleSheet.create({
     alignItems:      'center',
   },
   modal: {
-    backgroundColor: '#fff',
-    borderRadius:    20,
-    padding:         32,
+    width:        '82%',
+    borderRadius: 24,
+    overflow:     'hidden',
+    elevation:    16,
+  },
+  modalTop: {
+    paddingVertical: 28,
     alignItems:      'center',
-    width:           '80%',
-    elevation:       10,
   },
-  gameOverTitle: {
-    fontSize:     28,
-    fontWeight:   'bold',
-    color:        '#E75480',
-    marginBottom: 12,
+  goEmoji: {
+    fontSize: 54,
   },
-  finalScore: {
-    fontSize:     22,
-    color:        '#333',
+  goTitle: {
+    fontSize:   24,
+    fontWeight: '900',
+    color:      '#fff',
+    marginTop:  6,
+  },
+  modalBottom: {
+    backgroundColor:  '#fff',
+    paddingVertical:  28,
+    alignItems:       'center',
+    paddingHorizontal: 24,
+  },
+  goScoreLabel: {
+    fontSize:      11,
+    fontWeight:    '800',
+    color:         '#C44DFF',
+    letterSpacing: 2,
+    marginBottom:  4,
+  },
+  goScore: {
+    fontSize:     56,
+    fontWeight:   '900',
+    color:        '#FF6B9D',
     marginBottom: 24,
   },
   retryBtn: {
-    backgroundColor:  '#FF85A1',
-    paddingHorizontal: 32,
-    paddingVertical:   14,
     borderRadius:      30,
+    paddingHorizontal: 40,
+    paddingVertical:   14,
   },
   retryText: {
     color:      '#fff',
     fontSize:   18,
-    fontWeight: 'bold',
+    fontWeight: '900',
   },
 });
